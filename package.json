@@ -1,0 +1,19 @@
+{
+  "description": "",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "webpack": "^3.6.0"
+  },
+  "license": "MIT",
+  "name": "runningcookie",
+  "scripts": {
+    "build": "webpack",
+    "build-watch": "webpack --env.watch",
+    "dev": "webpack --config webpack-dev.config.js",
+    "dev-watch": "webpack --config webpack-dev.config.js --env.watch"
+  },
+  "title": "RunningCookie",
+  "version": "0.1.0"
+}
