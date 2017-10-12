@@ -10,7 +10,6 @@ module.exports = (env = {}) => {
     module: {
       loaders: [
         {
-          exclude: /node_modules/,
           test: /\.js$/,
           use: [
             {
