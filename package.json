@@ -2,15 +2,16 @@
   "bugs": {
     "url": "https://github.com/andrvyal/runningcookie/issues"
   },
-  "description": "",
-  "devDependencies": {
+  "dependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.0",
     "tinyutils": "git+https://github.com/andrvyal/tinyutils.git",
     "webpack": "^3.6.0"
   },
+  "description": "",
   "license": "MIT",
+  "main": "dist/runningcookie.js",
   "name": "runningcookie",
   "repository": {
     "type": "git",
@@ -21,8 +22,8 @@
     "build-watch": "webpack --env.watch",
     "dev": "webpack --config webpack-dev.config.js",
     "dev-watch": "webpack --config webpack-dev.config.js --env.watch",
-    "prepare": "npm run build"
+    "postinstall": "npm run build"
   },
   "title": "RunningCookie",
-  "version": "0.2.0"
+  "version": "0.2.1"
 }

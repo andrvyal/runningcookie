@@ -1,5 +1,5 @@
 import Cookies from './Cookies';
-import EventObject from '../../node_modules/tinyutils/src/EventObject';
+import EventObject from 'tinyutils/src/EventObject';
 import Session from './Session';
 
 const CHECK_INTERVAL = 100;
