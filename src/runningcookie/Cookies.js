@@ -1,25 +1,25 @@
 const DEFAULT_PATH = '/';
 
-class Cookies {
-  get EXPIRED() {
+export default class Cookies {
+  static get EXPIRED() {
     return new Date(Date.now() - 1);
   }
 
-  get FALSE() {
+  static get FALSE() {
     return '';
   }
 
-  get TRUE() {
+  static get TRUE() {
     return '1';
   }
 
-  get(name) {
+  static get(name) {
     let matches = document.cookie.match(new RegExp('(?:^|; )' + encodeURIComponent(name) + '=([^;]*)'));
 
     return matches ? decodeURIComponent(matches[1]) : undefined;
   }
 
-  set(name, value, {domain, expires, path = DEFAULT_PATH} = {}) {
+  static set(name, value, {domain, expires, path = DEFAULT_PATH} = {}) {
     let cookie = name + '=' + encodeURIComponent(value);
 
     cookie += ';path=' + path;
@@ -33,5 +33,3 @@ class Cookies {
     document.cookie = cookie;
   }
 }
-
-export default new Cookies();
