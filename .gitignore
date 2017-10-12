@@ -2,3 +2,4 @@ dist/
 node_modules/
 *.sublime-*
 local.bat
+npm-debug.log
