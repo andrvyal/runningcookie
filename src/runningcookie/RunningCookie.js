@@ -2,34 +2,57 @@ import Cookies from './Cookies';
 import EventObject from 'tinyutils/src/EventObject';
 import Session from './Session';
 
-const CHECK_INTERVAL = 100;
+const CHECK_DELAY_DEFAULT = 500;
+const CHECK_DELAY_MAX = 10000;
+const CHECK_DELAY_MIN = 100;
 const DESKTOP = !/Android|iPhone|iPad|iPod|IEMobile|webOS|BlackBerry|Opera Mini/i.test(navigator.userAgent);
-const DESKTOP_LIFETIME = 5000;
-const DESKTOP_INTERVAL = DESKTOP_LIFETIME / 10;
-const ERROR_ALREADY_STOPPED = 'This session has already been stopped';
-const ERROR_ANOTHER_SESSION = 'Another session is running';
+const DESKTOP_LIFETIME = 2000;
+const DESKTOP_UPDATE_DELAY = DESKTOP_LIFETIME / 10;
+const ERRORS = Object.freeze({
+  ALREADY_INTERRUPTED: 'This session has already been interrupted',
+  ALREADY_STOPPED: 'This session has already been stopped',
+  COOKIE_NOT_AVAILABLE: 'This cookie is not available'
+});
 const PRIVATE = new WeakMap();
 
 export default class RunningCookie {
-  static is(name) {
-    return Boolean(Cookies.get(name));
+  static get ERRORS() {
+    return ERRORS;
   }
 
-  constructor(name, {overwrite = false} = {}) {
-    if (!overwrite) {
-      let cookie = Cookies.get(name);
-      if (cookie) {
-        throw new Error(ERROR_ANOTHER_SESSION);
-      }
+  static isFree(name) {
+    return !Cookies.get(name);
+  }
+
+  constructor(name) {
+    let cookie = Cookies.get(name);
+    if (cookie) {
+      throw new Error(ERRORS.COOKIE_NOT_AVAILABLE);
     }
 
     let checkInterval;
-    let cookieInterval;
     let eventObject = new EventObject();
     let sessionId = Session.generateId();
     let status = {
       interrupted: false,
       stopped: false
+    };
+    let updateInterval;
+
+    let checkStatus = () => {
+      if (status.stopped) {
+        return;
+      }
+
+      let cookie = Cookies.get(name);
+      if (cookie !== sessionId) {
+        status.interrupted = true;
+        clearIntervals();
+
+        setTimeout(() => {
+          eventObject.trigger('interrupt');
+        });
+      }
     };
 
     let clearCookie = () => {
@@ -44,9 +67,9 @@ export default class RunningCookie {
         checkInterval = null;
       }
 
-      if (cookieInterval) {
-        clearInterval(cookieInterval);
-        cookieInterval = null;
+      if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
       }
 
       status.stopped = true;
@@ -58,42 +81,46 @@ export default class RunningCookie {
       } : {});
     };
 
+    let stop = () => {
+      clearIntervals();
+      clearCookie();
+    };
+
     PRIVATE.set(this, {
-      clearCookie,
-      clearIntervals,
+      checkStatus,
       eventObject,
       name,
       sessionId,
-      status
+      status,
+      stop
     });
 
     setCookie();
+    checkInterval = setInterval(checkStatus, CHECK_DELAY_DEFAULT);
+
     if (DESKTOP) {
-      cookieInterval = setInterval(setCookie, DESKTOP_INTERVAL);
+      updateInterval = setInterval(() => {
+        checkStatus();
+
+        if (!status.stopped) {
+          setCookie();
+        }
+      }, DESKTOP_UPDATE_DELAY);
     }
 
-    checkInterval = setInterval(() => {
-      let cookie = Cookies.get(name);
-      if (cookie !== sessionId) {
-        status.interrupted = true;
-        clearIntervals();
-
-        eventObject.trigger('interrupt');
-      }
-    }, CHECK_INTERVAL);
-
     window.addEventListener('unload', () => {
-      clearIntervals();
+      checkStatus();
 
-      let cookie = Cookies.get(name);
-      if (cookie === sessionId) {
-        clearCookie();
+      if (!status.stopped) {
+        stop();
       }
     });
   }
 
   get interrupted() {
-    let {status} = PRIVATE.get(this);
+    let {checkStatus, status} = PRIVATE.get(this);
+
+    checkStatus();
 
     return status.interrupted;
   }
@@ -111,24 +138,21 @@ export default class RunningCookie {
   }
 
   stop() {
-    let {clearCookie, clearIntervals, name, sessionId, status} = PRIVATE.get(this);
+    let {checkStatus, status, stop} = PRIVATE.get(this);
+
+    checkStatus();
 
     if (status.stopped) {
-      throw new Error(ERROR_ALREADY_STOPPED);
-    }
-
-    clearIntervals();
-
-    let cookie = Cookies.get(name);
-    if (cookie === sessionId) {
-      clearCookie();
-    } else if (cookie) {
-      throw new Error(ERROR_ANOTHER_SESSION);
+      throw new Error(status.interrupted ? ERRORS.ALREADY_INTERRUPTED : ERRORS.ALREADY_STOPPED);
+    } else {
+      stop();
     }
   }
 
   get stopped() {
-    let {status} = PRIVATE.get(this);
+    let {checkStatus, status} = PRIVATE.get(this);
+
+    checkStatus();
 
     return status.stopped;
   }
