@@ -24,10 +24,12 @@ export default class RunningCookie {
     return !Cookies.get(name);
   }
 
-  constructor(name) {
-    let cookie = Cookies.get(name);
-    if (cookie) {
-      throw new Error(ERRORS.COOKIE_NOT_AVAILABLE);
+  constructor(name, {overwrite = false} = {}) {
+    if (!overwrite) {
+      let cookie = Cookies.get(name);
+      if (cookie) {
+        throw new Error(ERRORS.COOKIE_NOT_AVAILABLE);
+      }
     }
 
     let checkInterval;
