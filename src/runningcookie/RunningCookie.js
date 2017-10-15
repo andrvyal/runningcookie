@@ -3,8 +3,6 @@ import EventObject from 'tinyutils/src/EventObject';
 import Session from './Session';
 
 const CHECK_DELAY_DEFAULT = 500;
-const CHECK_DELAY_MAX = 10000;
-const CHECK_DELAY_MIN = 100;
 const DESKTOP = !/Android|iPhone|iPad|iPod|IEMobile|webOS|BlackBerry|Opera Mini/i.test(navigator.userAgent);
 const DESKTOP_LIFETIME = 2000;
 const DESKTOP_UPDATE_DELAY = DESKTOP_LIFETIME / 10;
